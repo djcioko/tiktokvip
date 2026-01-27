@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Wall Magaro</title>
+    <style>
+        :root {
+            --bg-color: #00FF00; /* Green Screen default */
+            --cube-bg: #ffffff;
+            --text-color: #000000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            overflow-x: hidden;
+        }
+
+        /* Panou Control */
+        #admin-panel {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 2px solid #444;
+        }
+
+        input, select, button {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Zidul de cuburi */
+        #wall {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        /* Cubul individual */
+        .cube {
+            background: var(--cube-bg);
+            color: var(--text-color);
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .cube img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+        }
+
+        .cube .name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            word-break: break-all;
+            padding: 0 5px;
+        }
+
+        .cube .badge {
+            margin-top: 8px;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        /* Culori Badge-uri */
+        .badge-vip { background: #ffd700; color: #000; }
+        .badge-vizita { background: #00dbde; color: #fff; }
+        .badge-top { background: #ff4b2b; color: #fff; }
+        .badge-none { background: #eee; color: #333; }
+
+        /* Efect de Focus (cand dai click) */
+        .cube.focused {
+            transform: scale(1.8);
+            z-index: 999;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        .controls-toggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 1001;
+            background: #333;
+            color: white;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="controls-toggle" onclick="toggleAdmin()">⚙️</button>
+
+    <div id="admin-panel">
+        <input type="text" id="userName" placeholder="Nume User...">
+        <input type="text" id="userImg" placeholder="Link Poza (optional)">
+        <select id="userRole">
+            <option value="none">Simplu</option>
+            <option value="vip">⭐ VIP / LEGENDĂ</option>
+            <option value="top">🔥 TOP COMENTATOR</option>
+            <option value="vizita">🆕 PRIMA VIZITĂ</option>
+        </select>
+        <button onclick="addCube()" style="background: #28a745; color: white; font-weight: bold;">ADĂUGĂ</button>
+        <button onclick="clearWall()" style="background: #dc3545; color: white;">Golește Tot</button>
+        <label>Fundal: <input type="color" id="bgColor" value="#00FF00" onchange="updateColors()"></label>
+        <label>Cub: <input type="color" id="cubeColor" value="#ffffff" onchange="updateColors()"></label>
+    </div>
+
+    <div id="wall"></div>
+
+    <script>
+        let wallData = JSON.parse(localStorage.getItem('myLiveWall')) || [];
+
+        function init() {
+            renderWall();
+            updateColors();
+        }
+
+        function addCube() {
+            const name = document.getElementById('userName').value;
+            const img = document.getElementById('userImg').value;
+            const role = document.getElementById('userRole').value;
+
+            if(!name) return alert("Pune un nume!");
+
+            const newEntry = {
+                id: Date.now(),
+                name: name,
+                img: img || 'https://via.placeholder.com/50',
+                role: role
+            };
+
+            wallData.push(newEntry);
+            saveAndRender();
+            
+            // Reset fields
+            document.getElementById('userName').value = '';
+            document.getElementById('userImg').value = '';
+        }
+
+        function renderWall() {
+            const wall = document.getElementById('wall');
+            wall.innerHTML = '';
+
+            wallData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'cube';
+                div.onclick = () => div.classList.toggle('focused');
+                
+                let badgeText = '';
+                if(item.role === 'vip') badgeText = 'VIP';
+                if(item.role === 'top') badgeText = 'TOP';
+                if(item.role === 'vizita') badgeText = 'NOU';
+
+                div.innerHTML = `
+                    <img src="${item.img}">
+                    <div class="name">${item.name}</div>
+                    ${item.role !== 'none' ? `<div class="badge badge-${item.role}">${badgeText}</div>` : ''}
+                `;
+                wall.appendChild(div);
+            });
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('myLiveWall', JSON.stringify(wallData));
+            renderWall();
+        }
+
+        function clearWall() {
+            if(confirm("Ștergi tot zidul?")) {
+                wallData = [];
+                saveAndRender();
+            }
+        }
+
+        function updateColors() {
+            const bg = document.getElementById('bgColor').value;
+            const cb = document.getElementById('cubeColor').value;
+            document.documentElement.style.setProperty('--bg-color', bg);
+            document.documentElement.style.setProperty('--cube-bg', cb);
+            
+            // Auto-detect text color (black or white) based on cube color
+            const r = parseInt(cb.substr(1,2), 16);
+            const g = parseInt(cb.substr(3,2), 16);
+            const b = parseInt(cb.substr(5,2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            document.documentElement.style.setProperty('--text-color', brightness > 125 ? '#000000' : '#ffffff');
+        }
+
+        function toggleAdmin() {
+            document.getElementById('admin-panel').classList.toggle('hidden');
+        }
+
+        init();
+    </script>
+</body>
+</html>
