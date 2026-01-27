@@ -3,79 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Wall Magaro PRO</title>
+    <title>Magaro Wall VIP - Versiunea Finală</title>
     <style>
         :root { --bg-color: #00FF00; --cube-bg: #ffffff; --text-color: #000000; }
-        body { margin: 0; background-color: var(--bg-color); font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; }
+        body { margin: 0; background-color: var(--bg-color); font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; }
         
-        /* Panoul este acum mereu vizibil sus pana il ascunzi tu */
         #admin-panel { 
-            background: rgba(20, 20, 20, 0.95); color: white; padding: 15px; 
-            display: flex; gap: 12px; flex-wrap: wrap; position: relative; z-index: 9999;
-            border-bottom: 2px solid gold; align-items: center;
+            background: rgba(0, 0, 0, 0.95); color: white; padding: 15px; 
+            display: flex; gap: 15px; flex-wrap: wrap; position: relative; z-index: 9999;
+            border-bottom: 4px solid gold; align-items: center;
         }
 
         .cube {
-            width: 180px; height: 180px; background: var(--cube-bg); color: var(--text-color);
-            position: absolute; cursor: move; border-radius: 15px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); user-select: none;
-            transition: transform 0.2s; overflow: hidden;
-            border: 2px solid transparent;
-            /* Aceasta linie permite calibrarea/redimensionarea cu mouse-ul de la coltul dreapta-jos */
-            resize: both; overflow: auto; 
+            width: 380px; height: 480px; 
+            background: var(--cube-bg); color: var(--text-color);
+            position: absolute; cursor: move; border-radius: 25px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); user-select: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden; border: 6px solid #fff;
+            resize: both; 
         }
 
-        .cube img { width: 40%; height: auto; border-radius: 50%; margin-bottom: 10px; pointer-events: none; border: 2px solid #ddd; }
-        .cube .name { font-weight: bold; font-size: 1.2rem; pointer-events: none; text-transform: uppercase; }
-        .cube.focused { transform: scale(1.5) !important; z-index: 1000 !important; border-color: gold; box-shadow: 0 0 40px gold; }
+        .cube img { 
+            width: 100%; height: 75%; object-fit: cover; 
+            pointer-events: none; border-bottom: 6px solid #f0f0f0;
+        }
 
-        .badge { font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; margin-top: 10px; font-weight: 900; }
-        .badge-vip { background: linear-gradient(45deg, #ffd700, #ff8c00); color: black; }
+        .cube .name { 
+            font-size: 2.4rem; font-weight: 900; margin-top: 15px;
+            text-transform: uppercase; text-align: center; width: 100%;
+            line-height: 1.1; color: inherit;
+        }
+
+        /* ZOOM MAI MARE PE TASTA */
+        .cube.focused { 
+            transform: scale(1.6) !important; /* Zoom-ul este acum mult mai mare */
+            z-index: 1000 !important; 
+            border-color: #ffd700; 
+            box-shadow: 0 0 80px rgba(255,215,0,1); 
+        }
+
+        .badge { 
+            background: gold; color: black; padding: 6px 20px; 
+            border-radius: 12px; font-size: 1.1rem; margin-top: 8px; font-weight: 900;
+        }
 
         .hidden { display: none !important; }
-        .controls-toggle { position: fixed; top: 10px; right: 10px; z-index: 10000; padding: 10px; background: gold; border: none; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        .controls-toggle { position: fixed; top: 10px; right: 10px; z-index: 10000; background: gold; border: none; padding: 12px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
         
-        input[type="text"], select { padding: 8px; border-radius: 5px; border: 1px solid #555; background: #333; color: white; }
-        button { padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
+        input, select, button { padding: 12px; font-size: 1rem; border-radius: 10px; border: 1px solid #444; }
+        button { cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
-<button class="controls-toggle" onclick="toggleAdmin()">⚙️</button>
+<button class="controls-toggle" onclick="toggleAdmin()" title="Arată/Ascunde Panoul">⚙️</button>
 
 <div id="admin-panel">
-    <input type="text" id="userName" placeholder="Nume User...">
+    <input type="text" id="userName" placeholder="Nume User (Enter)">
+    <input type="text" id="userImg" placeholder="Paste Link Poza">
     
-    <label style="font-size: 12px; cursor: pointer; background: #444; padding: 8px; border-radius: 5px;">
-        📁 Upload Poza
+    <label style="background: #333; color: gold; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid gold; font-weight: bold;">
+        📁 UPLOAD POZA
         <input type="file" id="userFile" accept="image/*" style="display:none" onchange="handleFileUpload(this)">
     </label>
     <input type="hidden" id="tempImgData">
 
     <select id="userRole">
-        <option value="none">Fără Etichetă</option>
+        <option value="none">Simplu</option>
         <option value="vip">⭐ VIP / LEGENDĂ</option>
         <option value="top">🔥 TOP COMENTATOR</option>
-        <option value="vizita">🆕 PRIMA VIZITĂ</option>
     </select>
 
-    <input type="text" id="customKey" style="width: 50px;" placeholder="Tasta" title="Apasă tasta asta ca să-l mărești">
+    <input type="text" id="customKey" style="width: 70px; text-align: center; border: 2px solid gold;" placeholder="Tasta (1,2..)">
     
     <button onclick="addCube()" style="background: #28a745; color: white;">ADĂUGĂ</button>
-    <button onclick="clearWall()" style="background: #dc3545; color: white;">Șterge Tot</button>
-    <input type="color" id="bgColor" value="#00FF00" onchange="updateColors()" title="Schimbă fundalul verde">
+    <button onclick="clearWall()" style="background: #dc3545; color: white;">GOLIRE ZID</button>
+    <input type="color" id="bgColor" value="#00FF00" onchange="updateColors()" title="Culoare Fundal">
 </div>
 
 <div id="wall-container" style="position: relative; width: 100%; height: 100vh;"></div>
 
 <script>
-    let activeCube = null;
-    let keyMap = {}; // Aici salvăm ce tastă corespunde cărui cub
+    let keyMap = {};
 
-    // Event listener pentru taste
+    // Logică pentru taste
     document.addEventListener('keydown', (e) => {
-        // Dacă scriem în căsuțe, nu activăm tastele rapide
+        // Dacă scrii în căsuțe, Enter adaugă cubul, restul tastelor nu fac zoom
         if (document.activeElement.tagName === "INPUT") {
             if (e.key === "Enter") addCube();
             return;
@@ -83,16 +99,18 @@
 
         const key = e.key.toLowerCase();
         if (keyMap[key]) {
-            const target = document.getElementById(keyMap[key]);
-            if (target) target.classList.toggle('focused');
+            const cube = document.getElementById(keyMap[key]);
+            if (cube) cube.classList.toggle('focused');
         }
     });
 
+    // Funcție pentru Upload Poza de pe PC/Telefon
     function handleFileUpload(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 document.getElementById('tempImgData').value = e.target.result;
+                alert("Poza a fost încărcată! Apasă pe ADĂUGĂ.");
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -100,36 +118,36 @@
 
     function addCube() {
         const name = document.getElementById('userName').value;
-        const imgData = document.getElementById('tempImgData').value || 'https://via.placeholder.com/80';
+        const imgLink = document.getElementById('userImg').value;
+        const imgUpload = document.getElementById('tempImgData').value;
         const role = document.getElementById('userRole').value;
         const tasta = document.getElementById('customKey').value.toLowerCase();
 
-        if(!name) return alert("Pune un nume!");
+        if(!name) { alert("Introdu un nume!"); return; }
 
-        const wall = document.getElementById('wall-container');
+        const imgToUse = imgUpload || imgLink || 'https://via.placeholder.com/400';
         const cubeId = 'cube-' + Date.now();
         const div = document.createElement('div');
         div.className = 'cube';
         div.id = cubeId;
+        
+        // Poziționare inițială
         div.style.left = '50px';
         div.style.top = '180px';
         
-        // Dacă ai pus o tastă, o salvăm în memorie
-        if (tasta) {
-            keyMap[tasta] = cubeId;
-        }
+        // Mapare tastă
+        if (tasta) keyMap[tasta] = cubeId;
 
         div.innerHTML = `
-            <img src="${imgData}">
+            <img src="${imgToUse}">
             <div class="name">${name}</div>
-            ${role !== 'none' ? `<div class="badge badge-${role}">${role.toUpperCase()}</div>` : ''}
-            <div style="font-size:10px; color:gray; position:absolute; bottom:5px;">Tasta: ${tasta || 'fără'}</div>
+            ${role !== 'none' ? `<div class="badge">${role.toUpperCase()}</div>` : ''}
+            <div style="font-size:12px; color:#888; margin-top:5px;">Tasta: ${tasta || 'N/A'}</div>
         `;
 
-        // DRAG AND DROP
+        // DRAG AND DROP - Permite mutarea cubului
         div.onmousedown = function(e) {
-            if (e.target.className === 'cube') { // Mutăm doar dacă tragem de cub, nu de colțul de redimensionare
-                activeCube = div;
+            if (e.target.className.includes('cube')) {
                 let shiftX = e.clientX - div.getBoundingClientRect().left;
                 let shiftY = e.clientY - div.getBoundingClientRect().top;
 
@@ -140,37 +158,28 @@
 
                 function onMouseMove(e) { moveAt(e.pageX, e.pageY); }
                 document.addEventListener('mousemove', onMouseMove);
-                div.onmouseup = function() {
+
+                document.onmouseup = function() {
                     document.removeEventListener('mousemove', onMouseMove);
-                    div.onmouseup = null;
+                    document.onmouseup = null;
                 };
             }
         };
 
         div.ondragstart = function() { return false; };
 
-        wall.appendChild(div);
+        document.getElementById('wall-container').appendChild(div);
 
         // Resetare câmpuri
         document.getElementById('userName').value = '';
+        document.getElementById('userImg').value = '';
         document.getElementById('tempImgData').value = '';
         document.getElementById('customKey').value = '';
     }
 
-    function toggleAdmin() {
-        document.getElementById('admin-panel').classList.toggle('hidden');
-    }
-
-    function clearWall() {
-        if(confirm("Ștergi tot?")) {
-            document.getElementById('wall-container').innerHTML = '';
-            keyMap = {};
-        }
-    }
-
-    function updateColors() {
-        document.body.style.backgroundColor = document.getElementById('bgColor').value;
-    }
+    function toggleAdmin() { document.getElementById('admin-panel').classList.toggle('hidden'); }
+    function clearWall() { if(confirm("Vrei să ștergi toate cuburile?")) { document.getElementById('wall-container').innerHTML = ''; keyMap = {}; } }
+    function updateColors() { document.body.style.backgroundColor = document.getElementById('bgColor').value; }
 </script>
 </body>
 </html>
