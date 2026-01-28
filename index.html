@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magaro Wall VIP - Versiunea Stabilă</title>
+    <title>Magaro Wall VIP - Versiunea Finală Stabilă</title>
     <style>
         :root { --bg-color: #00FF00; --cube-bg: #ffffff; --text-color: #000000; }
         body { margin: 0; background-color: var(--bg-color); font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; }
@@ -17,20 +17,31 @@
         .cube {
             width: 300px; height: 400px; 
             background: var(--cube-bg); color: var(--text-color);
-            position: absolute; cursor: move; border-radius: 20px;
+            position: absolute; border-radius: 20px;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             box-shadow: 0 15px 40px rgba(0,0,0,0.4); user-select: none;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.4s, left 0.4s;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border: 5px solid #fff;
-            /* CALIBRARE ACTIVA */
-            resize: both; overflow: visible !important; 
+            
+            /* REPARARE RESIZE */
+            resize: both; 
+            overflow: hidden; 
+            min-width: 150px; min-height: 200px;
+        }
+
+        /* Indicator vizual pentru Resize (dreapta jos) */
+        .cube::after {
+            content: ""; position: absolute; bottom: 0; right: 0;
+            width: 20px; height: 20px;
+            background: linear-gradient(135deg, transparent 50%, #ccc 50%, #ccc 60%, transparent 60%, transparent 70%, #ccc 70%);
+            cursor: nwse-resize; z-index: 10;
         }
 
         .btn-remove {
-            position: absolute; top: -12px; right: -12px;
-            width: 35px; height: 35px; background: #ff0000; color: white;
+            position: absolute; top: 5px; right: 5px;
+            width: 30px; height: 30px; background: #ff0000; color: white;
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer; border: 3px solid #fff;
+            font-size: 16px; cursor: pointer; border: 2px solid #fff;
             z-index: 100; font-family: Arial, sans-serif; font-weight: bold;
         }
 
@@ -39,13 +50,15 @@
             transform: translate(-50%, -50%) scale(1.6) !important;
             z-index: 9999 !important; border-color: gold;
             box-shadow: 0 0 100px rgba(255, 215, 0, 1);
+            resize: none; /* Oprim resize cand e pe mijloc */
         }
 
-        .cube img { width: 100%; height: 75%; object-fit: cover; pointer-events: none; border-bottom: 4px solid #eee; border-radius: 15px 15px 0 0; }
+        .cube img { width: 100%; height: 75%; object-fit: cover; pointer-events: none; border-bottom: 4px solid #eee; }
         .cube .name { font-size: 1.8rem; font-weight: 900; margin-top: 10px; text-transform: uppercase; text-align: center; width: 100%; pointer-events: none; }
         
-        .key-tag { position: absolute; bottom: 5px; right: 10px; font-size: 12px; color: #777; font-family: sans-serif; background: rgba(255,255,255,0.7); padding: 1px 5px; border-radius: 4px; pointer-events: none; }
+        .key-tag { position: absolute; bottom: 5px; left: 10px; font-size: 12px; color: #777; font-family: sans-serif; pointer-events: none; }
         .badge { background: gold; color: black; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; margin-top: 3px; font-weight: bold; pointer-events: none; }
+        
         .hidden { display: none !important; }
         .controls-toggle { position: fixed; top: 10px; right: 10px; z-index: 10000; background: gold; border: none; padding: 10px; border-radius: 50%; cursor: pointer; }
         input, select, button { padding: 10px; border-radius: 8px; font-weight: bold; }
@@ -100,12 +113,9 @@
     }
 
     function removeCube(e, id, key) {
-        e.stopPropagation(); // Previne activarea drag-ului cand apesi pe X
+        e.stopPropagation();
         const el = document.getElementById(id);
-        if (el) {
-            el.remove();
-            delete keyMap[key];
-        }
+        if (el) { el.remove(); delete keyMap[key]; }
     }
 
     function addCube() {
@@ -135,25 +145,28 @@
             <div class="key-tag">Tasta: ${assignedKey}</div>
         `;
 
-        // LOGICA DE DRAG (REPARATA)
+        // DRAG LOGIC REPARATĂ: Nu activăm drag-ul dacă mouse-ul e în zona de resize
         div.onmousedown = function(e) {
             if (e.target.className === 'btn-remove') return;
             if (div.classList.contains('centered')) return;
             
-            // Verificam daca tragi de coltul de resize
+            // Detectăm dacă mouse-ul e în colțul dreapta-jos (zona de resize)
             const rect = div.getBoundingClientRect();
-            if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) return;
+            const isInResizeZone = (e.clientX > rect.right - 30 && e.clientY > rect.bottom - 30);
+            
+            if (isInResizeZone) return; // Lăsăm browser-ul să facă resize
 
-            let shiftX = e.clientX - div.getBoundingClientRect().left;
-            let shiftY = e.clientY - div.getBoundingClientRect().top;
+            let shiftX = e.clientX - rect.left;
+            let shiftY = e.clientY - rect.top;
 
             function moveAt(pageX, pageY) {
                 div.style.left = pageX - shiftX + 'px';
                 div.style.top = pageY - shiftY + 'px';
             }
 
-            function onMouseMove(e) { moveAt(e.pageX, e.pageY); }
+            function onMouseMove(ev) { moveAt(ev.pageX, ev.pageY); }
             document.addEventListener('mousemove', onMouseMove);
+            
             document.onmouseup = function() {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.onmouseup = null;
