@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magaro Wall Center Focus</title>
+    <title>Magaro Wall VIP - Live Clean</title>
     <style>
         :root { --bg-color: #00FF00; --cube-bg: #ffffff; --text-color: #000000; }
         body { margin: 0; background-color: var(--bg-color); font-family: 'Arial Black', sans-serif; overflow: hidden; height: 100vh; }
@@ -15,33 +15,42 @@
         }
 
         .cube {
-            width: 300px; height: 400px; 
+            width: 320px; height: 420px; 
             background: var(--cube-bg); color: var(--text-color);
             position: absolute; cursor: move; border-radius: 25px;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5); user-select: none;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Tranzitie lina pentru centrare */
-            overflow: hidden; border: 6px solid #fff;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: visible; border: 6px solid #fff;
             resize: both; 
         }
 
-        /* Stil pentru cand cubul este pe mijloc */
+        /* BUTONUL REMOVE (X) */
+        .btn-remove {
+            position: absolute; top: -15px; right: -15px;
+            width: 40px; height: 40px; background: #dc3545; color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; border: 3px solid white;
+            z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: 0.2s;
+        }
+        .btn-remove:hover { transform: scale(1.2); background: #ff0000; }
+
         .cube.centered {
-            top: 50% !important;
-            left: 50% !important;
+            top: 50% !important; left: 50% !important;
             transform: translate(-50%, -50%) scale(1.8) !important;
-            z-index: 9999 !important;
-            border-color: gold;
-            box-shadow: 0 0 100px rgba(255, 215, 0, 1);
+            z-index: 9999 !important; border-color: gold;
+            box-shadow: 0 0 120px rgba(255, 215, 0, 1);
         }
 
-        .cube img { width: 100%; height: 75%; object-fit: cover; pointer-events: none; border-bottom: 5px solid #eee; }
-        .cube .name { font-size: 2rem; font-weight: 900; margin-top: 10px; text-transform: uppercase; text-align: center; }
+        .cube img { width: 100%; height: 75%; object-fit: cover; pointer-events: none; border-bottom: 5px solid #eee; border-radius: 20px 20px 0 0; }
+        .cube .name { font-size: 2.2rem; font-weight: 900; margin-top: 12px; text-transform: uppercase; text-align: center; width: 100%; overflow: hidden; }
         
+        .key-tag { position: absolute; bottom: 8px; right: 15px; font-size: 14px; color: #666; font-family: sans-serif; font-weight: bold; background: rgba(255,255,255,0.8); padding: 2px 8px; border-radius: 5px; }
         .badge { background: gold; color: black; padding: 5px 15px; border-radius: 10px; font-size: 0.9rem; margin-top: 5px; font-weight: bold; }
         .hidden { display: none !important; }
-        .controls-toggle { position: fixed; top: 10px; right: 10px; z-index: 10000; background: gold; border: none; padding: 10px; border-radius: 50%; cursor: pointer; }
-        input, select, button { padding: 10px; border-radius: 8px; }
+        .controls-toggle { position: fixed; top: 10px; right: 10px; z-index: 10000; background: gold; border: none; padding: 12px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        input, select, button { padding: 12px; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -49,21 +58,20 @@
 <button class="controls-toggle" onclick="toggleAdmin()">⚙️</button>
 
 <div id="admin-panel">
-    <input type="text" id="userName" placeholder="Nume...">
-    <input type="text" id="userImg" placeholder="Link Poza">
-    <label style="background: #333; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid gold;">
-        📁 Upload
+    <input type="text" id="userName" placeholder="Nume (Enter)">
+    <input type="text" id="userImg" placeholder="Link Poză (Paste)">
+    <label style="background: #333; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid gold; color: gold;">
+        📁 UPLOAD
         <input type="file" id="userFile" accept="image/*" style="display:none" onchange="handleFileUpload(this)">
     </label>
     <input type="hidden" id="tempImgData">
     <select id="userRole">
-        <option value="none">Simplu</option>
+        <option value="none">Fără Rol</option>
         <option value="vip">⭐ VIP</option>
         <option value="top">🔥 TOP</option>
     </select>
-    <input type="text" id="customKey" style="width: 50px;" placeholder="Tasta">
     <button onclick="addCube()" style="background: #28a745; color: white;">ADĂUGĂ</button>
-    <button onclick="clearWall()" style="background: #dc3545; color: white;">GOLIRE</button>
+    <button onclick="clearWall()" style="background: #dc3545; color: white;">GOLIRE TOT</button>
     <input type="color" id="bgColor" value="#00FF00" onchange="updateColors()">
 </div>
 
@@ -71,6 +79,8 @@
 
 <script>
     let keyMap = {};
+    const autoKeys = ['1','2','3','4','5','6','7','8','9','0','q','w','e','r','t','y','u','i','o','p','a','s','d','f','g','h','j','k','l'];
+    let cubeCount = 0;
 
     document.addEventListener('keydown', (e) => {
         if (document.activeElement.tagName === "INPUT") {
@@ -80,8 +90,7 @@
         const key = e.key.toLowerCase();
         if (keyMap[key]) {
             const el = document.getElementById(keyMap[key]);
-            // Toggle clasa centered - il duce pe mijloc sau il lasa la locul lui
-            el.classList.toggle('centered');
+            if (el) el.classList.toggle('centered');
         }
     });
 
@@ -93,33 +102,44 @@
         }
     }
 
+    function removeCube(id, key) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.remove();
+            delete keyMap[key]; // Eliberăm tasta
+        }
+    }
+
     function addCube() {
         const name = document.getElementById('userName').value;
         const imgLink = document.getElementById('userImg').value;
         const imgUpload = document.getElementById('tempImgData').value;
         const role = document.getElementById('userRole').value;
-        const tasta = document.getElementById('customKey').value.toLowerCase();
 
         if(!name) return;
 
-        const imgToUse = imgUpload || imgLink || 'https://via.placeholder.com/300';
+        const assignedKey = autoKeys[cubeCount % autoKeys.length];
+        const imgToUse = imgUpload || imgLink || 'https://via.placeholder.com/400';
         const cubeId = 'cube-' + Date.now();
+        
         const div = document.createElement('div');
         div.className = 'cube';
         div.id = cubeId;
-        div.style.left = '50px';
+        div.style.left = (50 + (cubeCount * 15)) + 'px';
         div.style.top = '180px';
         
-        if (tasta) keyMap[tasta] = cubeId;
+        keyMap[assignedKey] = cubeId;
 
         div.innerHTML = `
+            <div class="btn-remove" onclick="removeCube('${cubeId}', '${assignedKey}')">✖</div>
             <img src="${imgToUse}">
             <div class="name">${name}</div>
             ${role !== 'none' ? `<div class="badge">${role.toUpperCase()}</div>` : ''}
+            <div class="key-tag">Tasta: ${assignedKey}</div>
         `;
 
-        // DRAG LOGIC (se dezactiveaza cand e centrat ca sa nu il strici din gresala)
         div.onmousedown = function(e) {
+            if (e.target.className === 'btn-remove') return; // Nu muta daca vrei sa stergi
             if (div.classList.contains('centered')) return; 
             if (e.target.className.includes('cube')) {
                 let shiftX = e.clientX - div.getBoundingClientRect().left;
@@ -135,14 +155,20 @@
         };
 
         document.getElementById('wall-container').appendChild(div);
+        cubeCount++;
         document.getElementById('userName').value = '';
         document.getElementById('userImg').value = '';
         document.getElementById('tempImgData').value = '';
-        document.getElementById('customKey').value = '';
     }
 
     function toggleAdmin() { document.getElementById('admin-panel').classList.toggle('hidden'); }
-    function clearWall() { document.getElementById('wall-container').innerHTML = ''; keyMap = {}; }
+    function clearWall() { 
+        if(confirm("Ștergi tot zidul?")) { 
+            document.getElementById('wall-container').innerHTML = ''; 
+            keyMap = {}; 
+            cubeCount = 0; 
+        } 
+    }
     function updateColors() { document.body.style.backgroundColor = document.getElementById('bgColor').value; }
 </script>
 </body>
